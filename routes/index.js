@@ -39,4 +39,16 @@ router.get('/webhooks/:id', function(req,res,next){
   });
 });
 
+router.post('/reset', async function(req,res,next){
+  if(req.body.password === 'yesreset'){
+    try{
+      await webhookModel.remove({});
+      return res.send('Success');
+    }catch(err){
+      return next(err);
+    }
+  }
+  return res.send('Failue');
+});
+
 module.exports = router;
