@@ -22,7 +22,8 @@ router.post('/webhooks', function(req, res, next) {
 });
 
 router.get('/webhooks', function(req,res,next){
-  webhookModel.find({}, function(err, result){
+  const qry = webhookModel.find({}).sort(-1);
+  qry.exec(function(err, result){
     if(err){
       return next(err);
     }
