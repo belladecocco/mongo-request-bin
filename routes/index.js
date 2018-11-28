@@ -4,6 +4,8 @@ const router = express.Router();
 
 const webhookModel = require('../models/webhooks');
 
+const RESET_PASSWORD = process.env.RESET_PASSWORD;
+
 router.get('/', function(req,res,next){
   return res.json({
     running: true
@@ -41,7 +43,7 @@ router.get('/webhooks/:id', function(req,res,next){
 });
 
 router.post('/reset', async function(req,res,next){
-  if(req.body.password === 'yesreset'){
+  if(req.body.password === RESET_PASSWORD){
     try{
       await webhookModel.remove({});
       return res.send('Success');
@@ -49,7 +51,7 @@ router.post('/reset', async function(req,res,next){
       return next(err);
     }
   }
-  return res.send('Failue');
+  return res.send('Fa-eye-lure (Failure)');
 });
 
 module.exports = router;
