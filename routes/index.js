@@ -13,7 +13,7 @@ router.get('/', function(req,res,next){
 router.post('/webhooks', function(req, res, next) {
   let obj = {};
 
-  webhookModel.create({body: req.body}, function(err){
+  webhookModel.create({body: req.body, headers: req.headers}, function(err){
     if(err){
       return next(new Error('cannot write webhook to database'));
     }
