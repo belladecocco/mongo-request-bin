@@ -8,7 +8,8 @@ const schema = new Schema({
         type: Date,
         default: Date.now
     },
-    body: Mixed
+    body: Mixed,
+    headers: Mixed
 });
 
 
