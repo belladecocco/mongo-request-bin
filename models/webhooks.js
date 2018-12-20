@@ -5,6 +5,11 @@ const Mixed = Schema.Types.Mixed;
 
 const schema = new Schema({
     bucket: String,
+    requestMethod: {
+      type: String,
+      enum: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE'],
+      default: 'POST'
+    },
     receivedDateTime: {
         type: Date,
         default: Date.now
