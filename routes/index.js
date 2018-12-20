@@ -6,48 +6,62 @@ const webhookModel = require('../models/webhooks');
 
 const RESET_PASSWORD = process.env.RESET_PASSWORD;
 
-router.get('/', function(req,res,next){
+router.get('/', async function (req, res, next) {
   return res.json({
     running: true
   });
 });
 
-router.post('/webhooks', function(req, res, next) {
-  let obj = {};
-
-  webhookModel.create({body: req.body, headers: req.headers}, function(err){
-    if(err){
-      return next(new Error('cannot write webhook to database'));
-    }
-    return res.send('Success');
-  });
+router.get('/webhooks/:bucket/:id', async function (req, res, next) {
+  const qry = {
+    _id: req.params.id,
+    bucket: req.params.bucket
+  };
+  let results = {};
+  try {
+    results = await webhookModel.findOne(qry);
+  } catch (err) {
+    return next(err);
+  }
+  return res.json(results);
 });
 
-router.get('/webhooks', function(req,res,next){
-  const qry = webhookModel.find({}).sort({_id: -1});
-  qry.exec(function(err, result){
-    if(err){
-      return next(err);
-    }
-    return res.json(result);
-  });
+router.post('/webhooks/:bucket', async function (req, res, next) {
+  let obj = {
+    body: req.body,
+    headers: req.headers
+  };
+  if (req.params.bucket) {
+    obj.bucket = bucket;
+  }
+  try {
+    await webhookModel.create(obj);
+  } catch (err) {
+    return next(err);
+  }
+  return res.send('Success');
 });
 
-router.get('/webhooks/:id', function(req,res,next){
-  webhookModel.findOne({_id: req.params.id}, function(err, result){
-    if(err){
-      return next(err);
-    }
-    return res.json(result);
-  });
+router.get('/webhooks/:bucket', async function (req, res, next) {
+  let results;
+  let qry = {};
+  if (req.params.bucket) {
+    qry.bucket = req.params.bucket
+  }
+  try {
+    results = await webhookModel.find(qry).sort({ _id: -1 });
+  } catch (err) {
+    return next(err);
+  }
+  return res.json(results);
 });
 
-router.post('/reset', async function(req,res,next){
-  if(req.body.password === RESET_PASSWORD){
-    try{
+router.post('/reset', async function (req, res, next) {
+  if (req.body.password === RESET_PASSWORD) {
+    try {
       await webhookModel.remove({});
       return res.send('Success');
-    }catch(err){
+    } catch (err) {
       return next(err);
     }
   }
