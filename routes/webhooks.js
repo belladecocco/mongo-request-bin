@@ -7,7 +7,7 @@ const webhookModel = require('../models/webhooks');
 router.get('/', async function (req, res, next) {
     let results;
     try {
-        results = await webhookModel.discriminators('bucket');
+        results = await webhookModel.distinct('bucket');
     } catch (err) {
         return next(err);
     }
@@ -20,7 +20,7 @@ router.post('/:bucket', async function (req, res, next) {
         headers: req.headers
     };
     if (req.params.bucket) {
-        obj.bucket = bucket;
+        obj.bucket = req.params.bucket;
     }
     try {
         await webhookModel.create(obj);
