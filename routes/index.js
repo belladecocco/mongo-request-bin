@@ -44,6 +44,18 @@ router.get('/:bucket', async function (req, res, next) {
     return res.json(results);
 });
 
+router.post('/reset', async function (req, res, next) {
+    if (req.body && req.body.password === process.env.RESET_PASSWORD) {
+        try {
+            await webhookModel.remove({});
+        } catch (err) {
+            return next(err);
+        }
+        return res.json({ success: true, message: 'All webhooks were reset' })
+    }
+    return next();
+});
+
 router.all('/:bucket', async function (req, res, next) {
     let obj = {
         bucket: req.params.bucket,
