@@ -4,54 +4,75 @@ const router = express.Router();
 
 const webhookModel = require('../models/webhooks');
 
-const RESET_PASSWORD = process.env.RESET_PASSWORD;
-
-router.get('/', function(req,res,next){
-  return res.json({
-    running: true
-  });
+router.get('/', async function (req, res, next) {
+    let results;
+    try {
+        results = await webhookModel.distinct('bucket');
+    } catch (err) {
+        return next(err);
+    }
+    let obj = {
+        buckets: results || []
+    };
+    return res.json(obj);
 });
 
-router.post('/webhooks', function(req, res, next) {
-  let obj = {};
+router.get('/:bucket/:id', async function (req, res, next) {
+    const qry = {
+        _id: req.params.id,
+        bucket: req.params.bucket
+    };
+    let results = {};
+    try {
+        results = await webhookModel.findOne(qry);
+    } catch (err) {
+        return next(err);
+    }
+    return res.json(results);
+});
 
-  webhookModel.create({body: req.body, headers: req.headers}, function(err){
-    if(err){
-      return next(new Error('cannot write webhook to database'));
+router.get('/:bucket', async function (req, res, next) {
+    const qry = {
+        bucket: req.params.bucket
+    };
+    let results = {};
+    try {
+        results = await webhookModel.find(qry).sort({ _id: -1 });
+    } catch (err) {
+        return next(err);
+    }
+    return res.json(results);
+});
+
+router.post('/reset', async function (req, res, next) {
+    if (req.body && req.body.password === process.env.RESET_PASSWORD) {
+        try {
+            await webhookModel.remove({});
+        } catch (err) {
+            return next(err);
+        }
+        return res.json({ success: true, message: 'All webhooks were reset' })
+    }
+    return next();
+});
+
+router.all('/:bucket', async function (req, res, next) {
+    let obj = {
+        bucket: req.params.bucket,
+        method: req.method,
+        headers: req.headers,
+        body: req.body
+    };
+    if (req.params.bucket) {
+        obj.bucket = req.params.bucket;
+    }
+    try {
+        await webhookModel.create(obj);
+    } catch (err) {
+        return next(err);
     }
     return res.send('Success');
-  });
 });
 
-router.get('/webhooks', function(req,res,next){
-  const qry = webhookModel.find({}).sort({_id: -1});
-  qry.exec(function(err, result){
-    if(err){
-      return next(err);
-    }
-    return res.json(result);
-  });
-});
-
-router.get('/webhooks/:id', function(req,res,next){
-  webhookModel.findOne({_id: req.params.id}, function(err, result){
-    if(err){
-      return next(err);
-    }
-    return res.json(result);
-  });
-});
-
-router.post('/reset', async function(req,res,next){
-  if(req.body.password === RESET_PASSWORD){
-    try{
-      await webhookModel.remove({});
-      return res.send('Success');
-    }catch(err){
-      return next(err);
-    }
-  }
-  return res.send('Fa-eye-lure (Failure)');
-});
 
 module.exports = router;

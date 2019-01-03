@@ -4,6 +4,8 @@ const Schema = mongoose.Schema;
 const Mixed = Schema.Types.Mixed;
 
 const schema = new Schema({
+    bucket: String,
+    method: String,
     receivedDateTime: {
         type: Date,
         default: Date.now
