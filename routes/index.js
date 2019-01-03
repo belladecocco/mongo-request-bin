@@ -11,7 +11,10 @@ router.get('/', async function (req, res, next) {
     } catch (err) {
         return next(err);
     }
-    return res.json(results);
+    let obj = {
+        buckets: results || []
+    };
+    return res.json(obj);
 });
 
 router.get('/:bucket/:id', async function (req, res, next) {
