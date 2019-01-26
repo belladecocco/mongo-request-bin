@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+process.on('unhandledRejection', function(err, promise) {
+  console.error('Unhandled rejection (promise: ', promise, ', reason: ', err, ').');
+  throw err;
+});
+
 /**
  * Module dependencies.
  */

@@ -1,0 +1,94 @@
+#!/usr/bin/env node
+'use strict';
+
+const request = require('request');
+const util = require('util');
+const fs = require('fs');
+
+const requestPromise = util.promisify(request);
+
+const BACKOFF_MS = 250;
+
+const POLLING_INTERVAL = 15000;
+
+const bucketName = process.argv[2];
+const forwardUrl = process.argv[3];
+let sinceId = process.argv[4];
+
+if(!bucketName || !forwardUrl || !sinceId){
+  throw new Error('correct usage is ./bridge <bucketName> <forwardUrl> <sinceId>');
+}
+
+// const serverAddress = 'https://mongorequestbin.herokuapp.com';
+const serverAddress = 'http://localhost:3000';
+
+// TODO: open websocket with the server to get socket updates when a webhook comes in
+
+// make a http call to the forward
+
+async function backoff(backoffMs){
+  return new Promise(function(resolve, reject){
+    console.log();
+    setTimeout(function(){
+      return resolve();
+    }, backoffMs);
+  })
+}
+
+async function checkForUpdates(){
+  console.log(`checking for webhooks since ${sinceId} at ${new Date()}`);
+  let requestObj = {
+    method: 'GET',
+    baseUrl: serverAddress,
+    url: `/${bucketName}`,
+    json: true
+  };
+  if(sinceId){
+    requestObj.qs = {sinceId}
+  }
+
+  let result;
+  try{
+    result = await requestPromise(requestObj);
+  }catch(err){
+    throw err;
+  }
+
+  // fs.writeFileSync(`./requets/${new Date().toISOString()}.json`, JSON.stringify(result, null, 2));
+  console.log(`found ${result.body.length} webhooks`);
+  console.log();
+
+  for(const webhook of result.body){
+
+    let newRequest = {
+      uri: forwardUrl, 
+      json: true,
+      method: webhook.method,
+      // headers: webhook.headers,
+      body: webhook.body
+    };
+
+    console.log(`sending webhook from ${fromToString()}`, newRequest.body);
+    await requestPromise(newRequest);
+    await backoff(BACKOFF_MS);
+  }
+}
+
+function pollForUpdates(){
+  console.log(`Starting Bridge from ${fromToString()}`);
+  console.log();
+  checkForUpdates();
+  setInterval(function(){
+    checkForUpdates();
+  }, POLLING_INTERVAL);
+}
+
+function fromToString(){
+  return `${serverAddress}/${bucketName} to ${forwardUrl}`;
+}
+
+console.log();
+console.log();
+console.log();
+
+pollForUpdates();

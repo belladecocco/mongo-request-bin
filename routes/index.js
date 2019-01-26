@@ -35,9 +35,20 @@ router.get('/:bucket', async function (req, res, next) {
     const qry = {
         bucket: req.params.bucket
     };
-    let results = {};
+    const sortObj = { _id: -1 };
+
+    if(req.query && req.query.sinceId){
+        qry._id = {
+            $gt: req.query.sinceId
+        }
+        sortObj._id = 1;
+    };
+
+    console.log(sortObj);
+
+    let results;
     try {
-        results = await webhookModel.find(qry).sort({ _id: -1 });
+        results = await webhookModel.find(qry).sort(sortObj);
     } catch (err) {
         return next(err);
     }
