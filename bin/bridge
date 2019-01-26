@@ -19,8 +19,8 @@ if(!bucketName || !forwardUrl || !sinceId){
   throw new Error('correct usage is ./bridge <bucketName> <forwardUrl> <sinceId>');
 }
 
-// const serverAddress = 'https://mongorequestbin.herokuapp.com';
-const serverAddress = 'http://localhost:3000';
+const serverAddress = 'https://mongorequestbin.herokuapp.com';
+// const serverAddress = 'http://localhost:3000';
 
 // TODO: open websocket with the server to get socket updates when a webhook comes in
 
