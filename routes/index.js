@@ -44,8 +44,6 @@ router.get('/:bucket', async function (req, res, next) {
         sortObj._id = 1;
     };
 
-    console.log(sortObj);
-
     let results;
     try {
         results = await webhookModel.find(qry).sort(sortObj);
