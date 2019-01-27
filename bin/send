@@ -1,0 +1,48 @@
+#!/usr/bin/env node
+"use strict";
+
+const request = require("request");
+const util = require("util");
+
+const requestPromise = util.promisify(request);
+
+const bucketName = process.argv[2];
+const forwardUrl = process.argv[3];
+const webhookId = process.argv[4];
+
+if (!bucketName || !forwardUrl || !webhookId) {
+  throw new Error(
+    "correct usage is ./bridge <bucketName> <forwardUrl> <webhookId>"
+  );
+}
+
+const serverAddress = "https://mongorequestbin.herokuapp.com";
+// const serverAddress = 'http://localhost:3000';
+
+async function sendWebhook() {
+  let requestObj = {
+    method: "GET",
+    baseUrl: serverAddress,
+    url: `/${bucketName}/${webhookId}`,
+    json: true
+  };
+
+  let webhook = await requestPromise(requestObj);
+
+  let newRequest = {
+    uri: forwardUrl,
+    json: true,
+    method: webhook.method,
+    // headers: webhook.headers,
+    body: webhook.body
+  };
+
+  await requestPromise(newRequest);
+
+}
+
+try {
+  sendWebhook();
+} catch (err) {
+  throw err;
+}
