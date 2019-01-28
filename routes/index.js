@@ -4,9 +4,6 @@ const router = express.Router();
 const socketService = require("../bin/socketService");
 const webhookModel = require("../models/webhooks");
 
-const webhookModel = require('../models/webhooks');
-
-
 /**
  * @api {get} / Get Buckets
  * @apiName Get Buckets
@@ -97,32 +94,12 @@ router.all('/:bucket', async function (req, res, next) {
         obj.bucket = req.params.bucket;
     }
     try {
-      await webhookModel.remove({});
+      await webhookModel.create(obj);
     } catch (err) {
       return next(err);
     }
-    return res.json({ success: true, message: "All webhooks were reset" });
-  }
-  return next();
-});
-
-router.all("/:bucket", async function(req, res, next) {
-  let obj = {
-    bucket: req.params.bucket,
-    method: req.method,
-    headers: req.headers,
-    body: req.body
-  };
-  if (req.params.bucket) {
-    obj.bucket = req.params.bucket;
-  }
-  try {
-    await webhookModel.create(obj);
-  } catch (err) {
-    return next(err);
-  }
-  socketService.emit("webhook", obj);
-  return res.send("Success");
+    socketService.emit("webhook", obj);
+    return res.send('Success');
 });
 
 module.exports = router;
