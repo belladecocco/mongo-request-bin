@@ -4,6 +4,14 @@ const router = express.Router();
 
 const webhookModel = require('../models/webhooks');
 
+
+/**
+ * @api {get} / Get Buckets
+ * @apiName Get Buckets
+ * @apiGroup API
+ * @apiDescription gets a list of all the buckets on the server
+ */
+
 router.get('/', async function (req, res, next) {
     let results;
     try {
@@ -17,6 +25,12 @@ router.get('/', async function (req, res, next) {
     return res.json(obj);
 });
 
+/**
+ * @api {get} /:bucketName/:webhookId Get Webhook
+ * @apiName Get Webhook
+ * @apiGroup API
+ * @apiDescription get a specific webhook from a bucket
+ */
 router.get('/:bucket/:id', async function (req, res, next) {
     const qry = {
         _id: req.params.id,
@@ -31,6 +45,12 @@ router.get('/:bucket/:id', async function (req, res, next) {
     return res.json(results);
 });
 
+/**
+ * @api {get} /:bucketName Get Webhooks from Bucket
+ * @apiName Get Webhooks from Bucket
+ * @apiGroup API
+ * @apiDescription gets the most recent webhooks from the bucket from newest to oldest
+ */
 router.get('/:bucket', async function (req, res, next) {
     const qry = {
         bucket: req.params.bucket
@@ -44,6 +64,14 @@ router.get('/:bucket', async function (req, res, next) {
     return res.json(results);
 });
 
+/**
+ * @api {post} /reset Reset
+ * @apiName Reset
+ * @apiGroup API
+ * @apiDescription deletes all the webhooks in the database
+ * 
+ * @apiParam {String} password the password to reset the server from the environment variable `RESET_PASSWORD` the server
+ */
 router.post('/reset', async function (req, res, next) {
     if (req.body && req.body.password === process.env.RESET_PASSWORD) {
         try {
