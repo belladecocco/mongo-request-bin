@@ -1,78 +1,78 @@
-'use strict';
-const express = require('express');
+"use strict";
+const express = require("express");
 const router = express.Router();
+const socketService = require("../bin/socketService");
+const webhookModel = require("../models/webhooks");
 
-const webhookModel = require('../models/webhooks');
+router.get("/", async function(req, res, next) {
+  let results;
+  try {
+    results = await webhookModel.distinct("bucket");
+  } catch (err) {
+    return next(err);
+  }
+  let obj = {
+    buckets: results || []
+  };
+  return res.json(obj);
+});
 
-router.get('/', async function (req, res, next) {
-    let results;
+router.get("/:bucket/:id", async function(req, res, next) {
+  const qry = {
+    _id: req.params.id,
+    bucket: req.params.bucket
+  };
+  let results = {};
+  try {
+    results = await webhookModel.findOne(qry);
+  } catch (err) {
+    return next(err);
+  }
+  return res.json(results);
+});
+
+router.get("/:bucket", async function(req, res, next) {
+  const qry = {
+    bucket: req.params.bucket
+  };
+  let results = {};
+  try {
+    results = await webhookModel.find(qry).sort({ _id: -1 });
+  } catch (err) {
+    return next(err);
+  }
+  return res.json(results);
+});
+
+router.post("/reset", async function(req, res, next) {
+  if (req.body && req.body.password === process.env.RESET_PASSWORD) {
     try {
-        results = await webhookModel.distinct('bucket');
+      await webhookModel.remove({});
     } catch (err) {
-        return next(err);
+      return next(err);
     }
-    let obj = {
-        buckets: results || []
-    };
-    return res.json(obj);
+    return res.json({ success: true, message: "All webhooks were reset" });
+  }
+  return next();
 });
 
-router.get('/:bucket/:id', async function (req, res, next) {
-    const qry = {
-        _id: req.params.id,
-        bucket: req.params.bucket
-    };
-    let results = {};
-    try {
-        results = await webhookModel.findOne(qry);
-    } catch (err) {
-        return next(err);
-    }
-    return res.json(results);
+router.all("/:bucket", async function(req, res, next) {
+  let obj = {
+    bucket: req.params.bucket,
+    method: req.method,
+    headers: req.headers,
+    body: req.body
+  };
+  if (req.params.bucket) {
+    obj.bucket = req.params.bucket;
+  }
+  try {
+    await webhookModel.create(obj);
+  } catch (err) {
+    return next(err);
+  }
+  socketService.emit("webhook", obj);
+  return res.send("Success");
 });
-
-router.get('/:bucket', async function (req, res, next) {
-    const qry = {
-        bucket: req.params.bucket
-    };
-    let results = {};
-    try {
-        results = await webhookModel.find(qry).sort({ _id: -1 });
-    } catch (err) {
-        return next(err);
-    }
-    return res.json(results);
-});
-
-router.post('/reset', async function (req, res, next) {
-    if (req.body && req.body.password === process.env.RESET_PASSWORD) {
-        try {
-            await webhookModel.remove({});
-        } catch (err) {
-            return next(err);
-        }
-        return res.json({ success: true, message: 'All webhooks were reset' })
-    }
-    return next();
-});
-
-router.all('/:bucket', async function (req, res, next) {
-    let obj = {
-        bucket: req.params.bucket,
-        method: req.method,
-        headers: req.headers,
-        body: req.body
-    };
-    if (req.params.bucket) {
-        obj.bucket = req.params.bucket;
-    }
-    try {
-        await webhookModel.create(obj);
-    } catch (err) {
-        return next(err);
-    }
-    return res.send('Success');
-});
-
 
 module.exports = router;
