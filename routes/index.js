@@ -37,7 +37,7 @@ router.get('/:bucket', async function (req, res, next) {
     };
     let results = {};
     try {
-        results = await webhookModel.find(qry).sort({ _id: -1 });
+        results = await webhookModel.find(qry).sort({ _id: -1 }).limit(50);
     } catch (err) {
         return next(err);
     }
